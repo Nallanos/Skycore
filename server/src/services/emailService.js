@@ -7,7 +7,7 @@ import path from 'path'
 const createTransporter = () => {
   // Using Gmail for MVP (you'd need to set up app password)
   // For production, use proper email service providers
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER || 'demo@skylume.com',
@@ -27,6 +27,7 @@ export const sendSkyScoreEmail = async (userData, imageInfo) => {
     console.log(`🖼️ Image generated: ${imageFilename}`)
     
     // In production, uncomment this to actually send emails:
+    /*
     const transporter = createTransporter()
     
     const mailOptions = {
@@ -85,6 +86,7 @@ export const sendSkyScoreEmail = async (userData, imageInfo) => {
     
     const result = await transporter.sendMail(mailOptions)
     console.log('Email sent successfully:', result.messageId)
+    */
     
     return { success: true, message: 'Email sent successfully (simulated)' }
   } catch (error) {
