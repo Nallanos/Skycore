@@ -31,6 +31,8 @@ router.post('/', async (req, res) => {
   try {
     const { email, blueskyHandle } = req.body
     
+    console.log(email, blueskyHandle)
+
     // Validate input
     const validationErrors = validateInput(email, blueskyHandle)
     if (validationErrors.length > 0) {
