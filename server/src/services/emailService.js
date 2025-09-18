@@ -27,7 +27,6 @@ export const sendSkyScoreEmail = async (userData, imageInfo) => {
     console.log(`🖼️ Image generated: ${imageFilename}`)
     
     // In production, uncomment this to actually send emails:
-    /*
     const transporter = createTransporter()
     
     const mailOptions = {
@@ -86,7 +85,6 @@ export const sendSkyScoreEmail = async (userData, imageInfo) => {
     
     const result = await transporter.sendMail(mailOptions)
     console.log('Email sent successfully:', result.messageId)
-    */
     
     return { success: true, message: 'Email sent successfully (simulated)' }
   } catch (error) {
