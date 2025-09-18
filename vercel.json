@@ -1,0 +1,14 @@
+# Deployment Configuration for Vercel
+
+# Build command
+npm run build
+
+# Output directory  
+client/dist
+
+# Install command
+npm run install:all
+
+# Environment Variables needed:
+# NODE_ENV=production
+# Add your email service credentials here
