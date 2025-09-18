@@ -7,7 +7,7 @@ import path from 'path'
 const createTransporter = () => {
   // Using Gmail for MVP (you'd need to set up app password)
   // For production, use proper email service providers
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER || 'demo@skylume.com',
