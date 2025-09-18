@@ -12,13 +12,10 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/client/$1"
+      "dest": "client/dist/$1"
     }
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "installCommand": "npm run install:all",
-  "buildCommand": "npm run build",
-  "outputDirectory": "client/dist"
+  }
 }
