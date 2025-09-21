@@ -42,6 +42,35 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// Debug route to check file system on Railway
+app.get('/debug/files', (req, res) => {
+  const fs = require('fs')
+  const debug = {
+    __dirname,
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT,
+    currentDirectory: process.cwd()
+  }
+  
+  try {
+    debug.filesInRoot = fs.readdirSync(__dirname)
+  } catch (e) {
+    debug.filesInRoot = `Error: ${e.message}`
+  }
+  
+  try {
+    const distPath = path.join(__dirname, 'dist')
+    debug.distExists = fs.existsSync(distPath)
+    if (debug.distExists) {
+      debug.filesInDist = fs.readdirSync(distPath)
+    }
+  } catch (e) {
+    debug.distError = e.message
+  }
+  
+  res.json(debug)
+})
+
 // Catch-all handler: send back React's index.html file for any non-API routes
 app.get('*', (req, res) => {
   // Don't serve index.html for API routes or static files
@@ -50,10 +79,43 @@ app.get('*', (req, res) => {
   }
   
   const indexPath = path.join(__dirname, 'dist', 'index.html')
+  
+  // Check if index.html exists before trying to serve it
+  const fs = require('fs')
+  
+  if (!fs.existsSync(indexPath)) {
+    console.error('index.html not found at:', indexPath)
+    console.error('__dirname:', __dirname)
+    
+    // List files in current directory
+    try {
+      const currentFiles = fs.readdirSync(__dirname)
+      console.error('Files in __dirname:', currentFiles)
+    } catch (e) {
+      console.error('Cannot read __dirname:', e.message)
+    }
+    
+    // Try to list dist folder if it exists
+    const distPath = path.join(__dirname, 'dist')
+    try {
+      const distFiles = fs.readdirSync(distPath)
+      console.error('Files in dist folder:', distFiles)
+    } catch (e) {
+      console.error('dist folder does not exist or cannot be read:', e.message)
+    }
+    
+    return res.status(404).json({ 
+      error: 'React app not found', 
+      details: 'index.html missing - build may have failed',
+      path: indexPath,
+      suggestion: 'Check Railway build logs and ensure build.sh executed correctly'
+    })
+  }
+  
   res.sendFile(indexPath, (err) => {
     if (err) {
       console.error('Error serving index.html:', err)
-      res.status(404).json({ error: 'Page not found' })
+      res.status(500).json({ error: 'Failed to serve page' })
     }
   })
 })
