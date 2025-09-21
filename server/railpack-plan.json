@@ -2,7 +2,7 @@
   "providers": [
     "node"
   ],
-  "buildCommand": "../build.sh",
+  "buildCommand": "chmod +x build-railway.sh && ./build-railway.sh",
   "startCommand": "node index.js",
   "variables": {
     "NODE_ENV": "production",
