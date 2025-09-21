@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import fs from 'fs'
 
 import skyScoreRoutes from './src/routes/skyScore.js'
 import { initializeDatabase } from './src/database/init.js'
@@ -44,7 +45,6 @@ app.get('/health', (req, res) => {
 
 // Debug route to check file system on Railway
 app.get('/debug/files', (req, res) => {
-  const fs = require('fs')
   const debug = {
     __dirname,
     nodeEnv: process.env.NODE_ENV,
@@ -81,8 +81,6 @@ app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, 'dist', 'index.html')
   
   // Check if index.html exists before trying to serve it
-  const fs = require('fs')
-  
   if (!fs.existsSync(indexPath)) {
     console.error('index.html not found at:', indexPath)
     console.error('__dirname:', __dirname)
