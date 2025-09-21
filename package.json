@@ -7,9 +7,10 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
-    "build": "cd client && npm run build",
+    "build": "cd client && npm ci && npm run build",
     "start": "cd server && npm start",
-    "install:all": "npm install && cd client && npm install && cd ../server && npm install"
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "postinstall": "cd client && npm install && cd ../server && npm install && mkdir -p server/database"
   },
   "keywords": ["bluesky", "social-media", "viral-marketing", "score"],
   "author": "SkyLume",
