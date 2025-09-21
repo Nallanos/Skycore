@@ -1,8 +1,25 @@
-import { createCanvas, loadImage, registerFont, CanvasRenderingContext2D } from 'canvas'
+// Image service with Canvas fallback
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { getArchetypeColor, getArchetypeDescription } from './skyScoreService.js'
+
+let canvas, loadImage, registerFont, CanvasRenderingContext2D
+let canvasAvailable = false
+
+// Try to load Canvas, fallback gracefully if not available
+try {
+  const canvasModule = await import('canvas')
+  canvas = canvasModule.createCanvas
+  loadImage = canvasModule.loadImage
+  registerFont = canvasModule.registerFont
+  CanvasRenderingContext2D = canvasModule.CanvasRenderingContext2D
+  canvasAvailable = true
+  console.log('✅ Canvas loaded successfully')
+} catch (error) {
+  console.warn('⚠️ Canvas not available, using fallback mode:', error.message)
+  canvasAvailable = false
+}
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -10,11 +27,17 @@ const __dirname = path.dirname(__filename)
 export const generateScoreCard = async (userData) => {
   const { email, blueskyHandle, skyScore, archetype } = userData
   
+  // If Canvas is not available, return a fallback
+  if (!canvasAvailable) {
+    console.log('🎨 Canvas not available, using text-based fallback')
+    return generateFallbackCard(userData)
+  }
+  
   // Create canvas
   const width = 800
   const height = 600
-  const canvas = createCanvas(width, height)
-  const ctx = canvas.getContext('2d')
+  const canvasInstance = canvas(width, height)
+  const ctx = canvasInstance.getContext('2d')
   
   // Add roundRect support
   addRoundRectSupport(ctx)
@@ -125,7 +148,7 @@ export const generateScoreCard = async (userData) => {
     fs.mkdirSync(imagesDir, { recursive: true })
   }
   
-  const buffer = canvas.toBuffer('image/png')
+  const buffer = canvasInstance.toBuffer('image/png')
   fs.writeFileSync(imagePath, buffer)
   
   return {
@@ -150,5 +173,50 @@ const addRoundRectSupport = (ctx) => {
       this.closePath()
       return this
     }
+  }
+}
+
+// Fallback when Canvas is not available
+const generateFallbackCard = async (userData) => {
+  const { email, blueskyHandle, skyScore, archetype } = userData
+  
+  console.log('🎨 Generating text-based score card fallback')
+  
+  // Create a simple text representation
+  const timestamp = Date.now()
+  const filename = `skyscore-${timestamp}-${Math.random().toString(36).substr(2, 9)}.txt`
+  const imagePath = path.join(__dirname, '../../images', filename)
+  
+  // Ensure images directory exists
+  const imagesDir = path.dirname(imagePath)
+  if (!fs.existsSync(imagesDir)) {
+    fs.mkdirSync(imagesDir, { recursive: true })
+  }
+  
+  // Create text-based card content
+  const cardContent = `
+╔════════════════════════════════════════╗
+║              🌟 SKYSCORE 🌟              ║
+╠════════════════════════════════════════╣
+║                                        ║
+║  Handle: ${blueskyHandle.padEnd(25)} ║
+║  Score:  ${skyScore.toString().padEnd(25)} ║
+║  Type:   ${archetype.padEnd(25)} ║
+║                                        ║
+║  ${getArchetypeDescription(archetype)}  ║
+║                                        ║
+╚════════════════════════════════════════╝
+
+Generated on: ${new Date().toISOString()}
+Email: ${email}
+  `
+  
+  // Write to file
+  fs.writeFileSync(imagePath, cardContent, 'utf8')
+  
+  return {
+    imagePath,
+    imageFilename: filename,
+    fallback: true
   }
 }
