@@ -1,0 +1,10 @@
+{
+  "providers": [
+    "node"
+  ],
+  "buildCommand": "npm ci && npm run build",
+  "startCommand": "npx serve -s dist -l 3000",
+  "variables": {
+    "NODE_ENV": "production"
+  }
+}
