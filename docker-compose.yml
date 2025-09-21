@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # Traefik - Reverse Proxy
+  traefik:
+    image: traefik:v3.0
+    container_name: skycore-traefik
+    restart: unless-stopped
+    command:
+      # Configuration globale
+      - --api.dashboard=true
+      - --api.debug=true
+      - --log.level=INFO
+      
+      # Configuration des entrypoints
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      
+      # Redirection HTTP vers HTTPS
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      
+      # Provider Docker
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=skycore-network
+      
+      # Let's Encrypt pour SSL automatique
+      - --certificatesresolvers.letsencrypt.acme.email=votre-email@example.com
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard Traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-acme:/acme.json
+    networks:
+      - skycore-network
+    labels:
+      # Dashboard Traefik
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.votre-domaine.com`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+      
+      # Middleware d'authentification basique pour le dashboard
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$2y$$10$$qZjQqVqKKMz6.r8VAz6NUeG.MgWn4pNqJplqVJ6IFOdyC0vCKz8Ku" # admin:admin
+
+  # Serveur Node.js Backend
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: skycore-server
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_PATH=/app/database/skycore.db
+      # Variables d'email - à configurer
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
+    volumes:
+      - server-data:/app/database
+      - server-images:/app/images
+    networks:
+      - skycore-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.skycore-api.rule=Host(`votre-domaine.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.skycore-api.entrypoints=websecure"
+      - "traefik.http.routers.skycore-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.skycore-api.loadbalancer.server.port=3001"
+      
+      # CORS headers
+      - "traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE"
+      - "traefik.http.middlewares.cors.headers.accesscontrolalloworigin=*"
+      - "traefik.http.middlewares.cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.cors.headers.addvaryheader=true"
+      - "traefik.http.routers.skycore-api.middlewares=cors"
+
+  # Client React Frontend
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: skycore-client
+    restart: unless-stopped
+    networks:
+      - skycore-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.skycore-app.rule=Host(`votre-domaine.com`)"
+      - "traefik.http.routers.skycore-app.entrypoints=websecure"
+      - "traefik.http.routers.skycore-app.tls.certresolver=letsencrypt"
+      - "traefik.http.services.skycore-app.loadbalancer.server.port=80"
+
+# Volumes persistants
+volumes:
+  traefik-acme:
+    driver: local
+  server-data:
+    driver: local
+  server-images:
+    driver: local
+
+# Réseau
+networks:
+  skycore-network:
+    driver: bridge

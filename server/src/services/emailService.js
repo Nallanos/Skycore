@@ -2,18 +2,55 @@ import nodemailer from 'nodemailer'
 import fs from 'fs'
 import path from 'path'
 
-// For MVP, we'll use a simple email service
-// In production, you'd use services like Brevo, Mailgun, or Resend
+// For production, use proper email service providers
 const createTransporter = () => {
-  // Using Gmail for MVP (you'd need to set up app password)
-  // For production, use proper email service providers
-  return nodemailer.createTransporter({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER || 'demo@skylume.com',
-      pass: process.env.EMAIL_PASSWORD || 'demo-password'
-    }
-  })
+  // Check if we have proper production email credentials
+  if (process.env.BREVO_API_KEY) {
+    // Use Brevo (Sendinblue) for production
+    return nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.BREVO_USER || 'your-brevo-email@domain.com',
+        pass: process.env.BREVO_API_KEY
+      }
+    })
+  } else if (process.env.MAILGUN_API_KEY) {
+    // Use Mailgun for production
+    return nodemailer.createTransport({
+      host: 'smtp.mailgun.org',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.MAILGUN_USER,
+        pass: process.env.MAILGUN_API_KEY
+      }
+    })
+  } else if (process.env.RESEND_API_KEY) {
+    // Use Resend for production
+    return nodemailer.createTransport({
+      host: 'smtp.resend.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'resend',
+        pass: process.env.RESEND_API_KEY
+      }
+    })
+  } else if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    // Fallback to Gmail with app password (not recommended for production)
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+      }
+    })
+  } else {
+    // No credentials found - will fall back to simulation
+    return null
+  }
 }
 
 export const sendSkyScoreEmail = async (userData, imageInfo) => {
@@ -21,14 +58,14 @@ export const sendSkyScoreEmail = async (userData, imageInfo) => {
   const { imagePath, imageFilename } = imageInfo
   
   try {
-    // For MVP, we'll simulate email sending
-    console.log(`📧 Simulating email send to: ${email}`)
-    console.log(`📊 SkyScore: ${skyScore} | Archetype: ${archetype}`)
-    console.log(`🖼️ Image generated: ${imageFilename}`)
-    
-    // In production, uncomment this to actually send emails:
-    /*
     const transporter = createTransporter()
+    
+    if (!transporter) {
+      throw new Error('No email configuration found. Please configure EMAIL_USER and EMAIL_PASSWORD in .env file or use a production email service (RESEND_API_KEY, BREVO_API_KEY, etc.)')
+    }
+    
+    // Production email sending
+    console.log(`📧 Sending production email to: ${email}`)
     
     const mailOptions = {
       from: process.env.EMAIL_FROM || 'SkyLume <noreply@skylume.com>',
@@ -85,12 +122,22 @@ export const sendSkyScoreEmail = async (userData, imageInfo) => {
     }
     
     const result = await transporter.sendMail(mailOptions)
-    console.log('Email sent successfully:', result.messageId)
-    */
+    console.log('✅ Email sent successfully:', result.messageId)
     
-    return { success: true, message: 'Email sent successfully (simulated)' }
+    return { success: true, message: 'Email sent successfully', messageId: result.messageId }
+    
   } catch (error) {
-    console.error('Email sending failed:', error)
-    throw new Error('Failed to send email')
+    console.error('❌ Email sending failed:', error)
+    
+    // Provide specific error messages for common issues
+    if (error.code === 'EAUTH' || error.responseCode === 535) {
+      throw new Error('Email authentication failed. Please check your EMAIL_USER and EMAIL_PASSWORD in .env file. For Gmail, make sure you are using an App Password.')
+    }
+    
+    if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
+      throw new Error('Unable to connect to email server. Please check your internet connection and email configuration.')
+    }
+    
+    throw new Error(`Failed to send email: ${error.message}`)
   }
 }

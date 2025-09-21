@@ -25,7 +25,11 @@ const SkyScoreForm = () => {
       const result = await response.json()
 
       if (response.ok) {
-        setMessage('🎉 Your SkyScore is being calculated! Check your email in a few moments.')
+        if (result.message.includes('simulated')) {
+          setMessage('🎉 Your SkyScore has been calculated! In production, this would be sent to your email.')
+        } else {
+          setMessage('🎉 Your SkyScore has been sent to your email! Check your inbox in a few moments.')
+        }
         setFormData({ email: '', blueskyHandle: '' })
       } else {
         setMessage(result.error || 'Something went wrong. Please try again.')

@@ -1,0 +1,83 @@
+# Configuration locale pour les tests (sans SSL)
+version: '3.8'
+
+services:
+  # Traefik - Version simplifiée pour le développement local
+  traefik:
+    image: traefik:v3.0
+    container_name: skycore-traefik-local
+    restart: unless-stopped
+    command:
+      - --api.dashboard=true
+      - --api.debug=true
+      - --log.level=INFO
+      - --entrypoints.web.address=:80
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=skycore-network
+    ports:
+      - "80:80"
+      - "8080:8080"  # Dashboard Traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - skycore-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+  # Serveur Node.js Backend
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: skycore-server-local
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_PATH=/app/database/skycore.db
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=${EMAIL_FROM:-SkyLume <test@localhost>}
+    volumes:
+      - server-data:/app/database
+      - server-images:/app/images
+    networks:
+      - skycore-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.skycore-api.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.skycore-api.entrypoints=web"
+      - "traefik.http.services.skycore-api.loadbalancer.server.port=3001"
+      - "traefik.http.middlewares.cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE"
+      - "traefik.http.middlewares.cors.headers.accesscontrolalloworigin=*"
+      - "traefik.http.middlewares.cors.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.cors.headers.addvaryheader=true"
+      - "traefik.http.routers.skycore-api.middlewares=cors"
+
+  # Client React Frontend
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: skycore-client-local
+    restart: unless-stopped
+    networks:
+      - skycore-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.skycore-app.rule=Host(`localhost`)"
+      - "traefik.http.routers.skycore-app.entrypoints=web"
+      - "traefik.http.services.skycore-app.loadbalancer.server.port=80"
+
+volumes:
+  server-data:
+    driver: local
+  server-images:
+    driver: local
+
+networks:
+  skycore-network:
+    driver: bridge
