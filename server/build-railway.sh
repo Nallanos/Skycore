@@ -63,6 +63,11 @@ echo "📦 Installing server dependencies..."
 cd "$SERVER_DIR"
 npm ci --omit=dev
 
+# Create database directory
+echo "🗄️  Creating database directory..."
+mkdir -p database
+chmod 755 database
+
 echo "✅ Build completed successfully!"
 echo "📍 Final structure check:"
 echo "  Server directory: $(pwd)"
@@ -70,3 +75,4 @@ echo "  Dist exists: $([ -d 'dist' ] && echo 'YES' || echo 'NO')"
 if [ -d 'dist' ]; then
     echo "  Dist contents: $(ls dist/ | tr '\n' ' ')"
 fi
+echo "  Database dir exists: $([ -d 'database' ] && echo 'YES' || echo 'NO')"

@@ -2,8 +2,8 @@
   "providers": [
     "node"
   ],
-  "buildCommand": "chmod +x build-railway.sh && ./build-railway.sh",
-  "startCommand": "npm start",
+  "buildCommand": "cd client && npm ci && npm run build && cp -r dist ../server/dist && cd ../server && npm ci --omit=dev && mkdir -p database",
+  "startCommand": "cd server && npm start",
   "variables": {
     "NODE_ENV": "production",
     "PORT": "3001"

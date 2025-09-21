@@ -1,14 +1,40 @@
 import sqlite3 from 'sqlite3'
 import path from 'path'
+import fs from 'fs'
 import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const dbPath = path.join(__dirname, '../../database/skycore.db')
+// Ensure database directory exists
+const dbDir = path.join(__dirname, '../../database')
+if (!fs.existsSync(dbDir)) {
+  console.log('📁 Creating database directory:', dbDir)
+  fs.mkdirSync(dbDir, { recursive: true })
+}
+
+const dbPath = path.join(dbDir, 'skycore.db')
+console.log('🗄️  Database path:', dbPath)
 
 // Create database connection
-const db = new sqlite3.Database(dbPath)
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('❌ Failed to open database:', err)
+    console.error('📍 Database path:', dbPath)
+    console.error('📁 Directory exists:', fs.existsSync(dbDir))
+    console.error('📝 Directory writable:', fs.access ? 'checking...' : 'unknown')
+    
+    // Try to check directory permissions
+    try {
+      fs.accessSync(dbDir, fs.constants.W_OK)
+      console.error('✅ Directory is writable')
+    } catch (permErr) {
+      console.error('❌ Directory not writable:', permErr.message)
+    }
+  } else {
+    console.log('✅ Database connection established')
+  }
+})
 
 export const initializeDatabase = () => {
   return new Promise((resolve, reject) => {
