@@ -16,6 +16,9 @@ const __dirname = path.dirname(__filename)
 const app = express()
 const PORT = process.env.PORT || 3001
 
+// Trust proxy for Railway (enables proper IP detection behind proxies)
+app.set('trust proxy', true)
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
