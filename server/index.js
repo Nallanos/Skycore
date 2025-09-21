@@ -31,12 +31,31 @@ app.use('/api', limiter)
 // Serve static files (generated images)
 app.use('/images', express.static(path.join(__dirname, 'images')))
 
+// Serve React build files
+app.use(express.static(path.join(__dirname, 'dist')))
+
 // Routes
 app.use('/api/skyscore', skyScoreRoutes)
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// Catch-all handler: send back React's index.html file for any non-API routes
+app.get('*', (req, res) => {
+  // Don't serve index.html for API routes or static files
+  if (req.path.startsWith('/api/') || req.path.startsWith('/images/')) {
+    return res.status(404).json({ error: 'Not found' })
+  }
+  
+  const indexPath = path.join(__dirname, 'dist', 'index.html')
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err)
+      res.status(404).json({ error: 'Page not found' })
+    }
+  })
 })
 
 // Error handling middleware

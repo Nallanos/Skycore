@@ -2,7 +2,7 @@
   "providers": [
     "node"
   ],
-  "buildCommand": "npm ci --omit=dev",
+  "buildCommand": "../build.sh",
   "startCommand": "node index.js",
   "variables": {
     "NODE_ENV": "production",
