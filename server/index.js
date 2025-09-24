@@ -16,14 +16,16 @@ const __dirname = path.dirname(__filename)
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// Trust proxy for Railway (enables proper IP detection behind proxies)
-app.set('trust proxy', true)
+// Trust proxy for Railway (secure configuration - trust only first proxy)
+app.set('trust proxy', 1)
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: process.env.NODE_ENV === 'production' ? 100 : 10, // More permissive in production
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
 })
 
 // Middleware
