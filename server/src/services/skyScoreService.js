@@ -9,6 +9,67 @@ export const calculateSkyScore = (blueskyHandle) => {
   return score
 }
 
+/**
+ * Calculate SkyScore with badges integration
+ * @param {string} blueskyHandle - User's Bluesky handle
+ * @returns {Object} Enhanced score data with badges
+ */
+export const calculateSkyScoreWithBadges = async (blueskyHandle) => {
+  try {
+    // Import here to avoid circular dependencies
+    const { getBadgeAggregationService } = await import('./badgeAggregationService.js')
+    const badgeService = getBadgeAggregationService()
+    
+    // Calculate traditional SkyScore
+    const skyScore = calculateSkyScore(blueskyHandle)
+    const archetype = getArchetype(skyScore)
+    
+    // Calculate badges
+    const badgeData = await badgeService.calculateUserBadges(blueskyHandle)
+    
+    // Enhanced metrics based on badge analysis
+    const enhancedMetrics = {
+      totalPosts: badgeData.analytics.activity.totalPosts,
+      avgPostsPerDay: badgeData.analytics.activity.avgPostsPerDay,
+      avgLikesPerPost: badgeData.analytics.engagement.avgLikesPerPost,
+      engagementScore: badgeData.analytics.engagement.engagementScore,
+      mostActiveHour: badgeData.analytics.patterns.mostActiveHour,
+      weekendActivity: badgeData.analytics.patterns.weekendPercentage,
+      replyRatio: badgeData.analytics.patterns.replyPercentage,
+    }
+    
+    return {
+      skyScore,
+      archetype,
+      badges: badgeData.selectedBadges,
+      allBadges: badgeData.allEarnedBadges,
+      metrics: enhancedMetrics,
+      insights: badgeService.getBadgeInsights(badgeData.allEarnedBadges, badgeData.analytics),
+      metadata: {
+        calculatedAt: new Date().toISOString(),
+        badgesEarned: badgeData.metadata.totalBadgesEarned,
+        badgesAvailable: badgeData.metadata.totalBadgesAvailable
+      }
+    }
+  } catch (error) {
+    console.error('Error calculating SkyScore with badges:', error)
+    
+    // Fallback to basic SkyScore
+    const skyScore = calculateSkyScore(blueskyHandle)
+    const archetype = getArchetype(skyScore)
+    
+    return {
+      skyScore,
+      archetype,
+      badges: [],
+      allBadges: [],
+      metrics: {},
+      insights: { strengths: [], improvements: [], personality: 'Unknown' },
+      metadata: { calculatedAt: new Date().toISOString(), error: error.message }
+    }
+  }
+}
+
 export const getArchetype = (score) => {
   if (score >= 80) return "Influencer"
   if (score >= 60) return "Connector"
