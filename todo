@@ -1,0 +1,184 @@
+# 📋 TODO - Implémentation Système de Badges SkyScore
+
+## 🏗️ PHASE 1 : FONDATIONS (Architecture de base)
+
+### ✅ Étapes Complétées
+- [x] **Analyser l'email actuel** - Comprendre emailService.js actuel
+- [x] **Plan d'amélioration détaillé** - Documenter idées et impacts dans plan.md  
+- [x] **Architecture badges** - Concevoir système modulaire pour 100 badges
+
+### 🔧 Étapes Techniques Fondamentales
+
+#### 1. **Interface & Configuration**
+- [ ] **BadgeEvaluator Interface** 
+  - Créer `server/src/badges/base/BadgeEvaluator.js`
+  - Template method pattern + méthode abstraite `evaluate()`
+  - Propriétés: id, name, emoji, description, category, priority
+
+- [ ] **Configuration Globale**
+  - Créer `server/src/badges/config/BadgeConfig.js`
+  - Seuils: NIGHT_HOURS, WORK_HOURS, VIRAL_THRESHOLD
+  - Limites: MAX_BADGES_IN_EMAIL, ANALYSIS_PERIOD_DAYS
+
+#### 2. **Data & Analytics Layers**
+- [ ] **Data Collector Service**
+  - Créer `server/src/services/userDataService.js`
+  - Méthodes mock pour MVP : collectUserData(), getProfile(), getPosts()
+  - Structure données : profile, posts, interactions, timestamps
+
+- [ ] **Analytics Service**  
+  - Créer `server/src/services/userAnalyticsService.js`
+  - Calculs métriques : totalPosts, avgPostsPerDay, hourlyDistribution
+  - Métriques engagement : avgLikes, followerRatio, viralPosts
+
+## 🎯 PHASE 2 : BADGES PAR CATÉGORIE (100 badges)
+
+### 📱 Catégorie 1 - Activité de Base (10 badges)
+- [ ] **ActivityBadges.js** 
+  - `NewbieBadge` : totalPosts < 5
+  - `GhostBadge` : totalPosts === 0  
+  - `SkyAddictBadge` : avgPostsPerDay > 5
+  - `WeekendPosterBadge` : 80% posts weekend
+  - `DailyGrinderBadge` : posts tous les jours
+  - `ComebackKidBadge` : gap >30j puis reprise
+  - `MidlifeCrisisBadge` : burst posts après silence
+  - `EchoBadge` : posts uniquement après autres
+  - `TimeTravelerBadge` : posts heures aléatoires
+  - `SkyTouristBadge` : 1 post puis jamais
+
+### 🌙 Catégorie 2 - Habitudes Horaires (10 badges)  
+- [ ] **TimeBasedBadges.js**
+  - `NightOwlBadge` : 30%+ posts après 23h
+  - `EarlyBirdBadge` : 30%+ posts avant 7h
+  - `InsomniacBadge` : plus actif nuit que jour
+  - `NineToFiverBadge` : posts uniquement 9h-17h
+  - `LunchBreakerBadge` : pic d'activité 12h-14h
+  - `JetlaggedBadge` : posts sur 16h+ avec variance élevée
+  - `SunWorshipperBadge` : actif uniquement jour
+  - `WeekendWarriorBadge` : 80%+ posts weekend
+  - `BlueMondayBadge` : 3x plus posts lundi
+  - `SiestaModeBadge` : 0 activité 14h-16h
+
+### 📊 Catégorie 3 - Stats/Ratios (10 badges)
+- [ ] **StatsBadges.js**
+  - `QualityCircleBadge` : followerRatio > 1.5
+  - `DesperateNetworkerBadge` : following/followers > 10
+  - `LikeMagnetBadge` : avgLikes > seuil élevé  
+  - `LoudspeakerBadge` : posts/replies ratio élevé
+  - `CollectorBadge` : following > 1000
+  - `TinyButMightyBadge` : followers < 100 mais engagement élevé
+  - `CloutChaserBadge` : replies majoritaires à gros comptes
+  - `OneHitWonderBadge` : 1 post viral, autres faibles
+  - `RatioLordBadge` : replies plus likées que posts
+  - `MuteButtonCandidateBadge` : trop de replies
+
+### ✍️ Catégorie 4 - Style d'Écriture (10 badges)
+- [ ] **WritingStyleBadges.js**  
+  - `MinimalistBadge` : avgPostLength < 50 chars
+  - `EssayistBadge` : avgPostLength > 200 chars
+  - `EmojiDealerBadge` : emoji dans 80%+ posts
+  - `GrammarCopBadge` : 0 typos détectées
+  - `HashtagHoarderBadge` : 3+ hashtags par post
+  - `LinkPusherBadge` : 50%+ posts avec liens
+  - `ShitposterBadge` : contenu chaos détecté
+  - `PoetBadge` : style haiku/poétique
+  - `HotTakeMachineBadge` : mots controverses
+  - `ThreadlordBadge` : threads fréquents
+
+### 💬 Catégorie 5 - Interaction (10 badges)
+- [ ] **InteractionBadges.js**
+  - `ReplyMachineBadge` : replies > posts
+  - `SilentLikerBadge` : likes sans posts/replies  
+  - `CheerleaderBadge` : posts positifs/encourageants
+  - `DebaterBadge` : mots argumentatifs fréquents
+  - `ConversationStarterBadge` : posts attirent replies
+  - `WallflowerBadge` : faibles interactions
+  - `HugDealerBadge` : énergie wholesome détectée
+  - `SaltyBadge` : replies conflictuelles
+  - `MentionsGoblinBadge` : trop de mentions
+  - `GhostedBadge` : faibles likes et replies
+
+## 🏆 PHASE 3 : BADGES AVANCÉS & PERFORMANCE
+
+### 🎭 Catégorie 6-10 (50 badges restants)
+- [ ] **PerformanceBadges.js** - Viral, Celebrity, Algorithm's Pet...
+- [ ] **PersonalityBadges.js** - Comedian, Philosopher, Optimist...  
+- [ ] **SpecialHabitsBadges.js** - Serial Deleter, Screenshot Hoarder...
+- [ ] **StreakBadges.js** - Iron Man, Consistency Champ, Burnout...
+- [ ] **EasterEggBadges.js** - NPC, Florida Man, Sky Pirate...
+
+## 🔧 PHASE 4 : ORCHESTRATION & INTÉGRATION
+
+### 🏭 Services d'Orchestration
+- [ ] **Badge Factory**
+  - Créer `server/src/badges/BadgeFactory.js`
+  - Instancier tous les 100 badges
+  - Méthodes : getAllEvaluators(), getByCategory()
+
+- [ ] **Aggregation Service** 
+  - Créer `server/src/services/badgeAggregationService.js`
+  - calculateUserBadges(), selectTopBadges()
+  - Algorithme de rareté et priorité
+
+- [ ] **Integration Service**
+  - Mettre à jour `server/src/services/skyScoreService.js`  
+  - calculateSkyScoreWithBadges()
+  - Retourner : score, archetype, badges, metrics
+
+### 📧 Intégration Email
+- [ ] **Template HTML**
+  - Mettre à jour `server/src/services/emailService.js`
+  - Section badges avec emojis et descriptions
+  - Design cards responsive
+
+## 🧪 PHASE 5 : TESTS & VALIDATION
+
+### 🔬 Tests Unitaires
+- [ ] **BadgeEvaluator Tests**
+  - Créer `server/tests/badges/BadgeEvaluator.test.js`
+  - Tester interface commune et méthodes abstraites
+
+- [ ] **Badges Représentatifs**
+  - Tests pour NightOwl, Ghost, ViralSpark, Philosopher
+  - Mock des analytics, vérifier conditions
+
+### 🔍 Tests d'Intégration  
+- [ ] **Flow Complet**
+  - Créer `server/tests/badges/integration.test.js`
+  - Mock userData → Analytics → Badges → Email
+  - Vérifier performance et cohérence
+
+### ⚡ Optimisation Finale
+- [ ] **Performance Testing**
+  - Tester avec datasets volumineux
+  - Optimiser calculs coûteux
+  - Ajouter cache si nécessaire
+
+- [ ] **Seuils & Calibration**
+  - Analyser distribution des badges sur données réelles
+  - Ajuster seuils pour équilibrer rareté
+  - A/B test email avec/sans badges
+
+---
+
+## 🎯 PRIORITÉS D'IMPLÉMENTATION
+
+### 🚀 **MVP Phase (Semaine 1)**
+1. Interface BadgeEvaluator + Config  
+2. Data & Analytics Services (mock)
+3. 2-3 badges simples (Ghost, NightOwl, Minimalist)
+4. Badge Factory basique
+5. Intégration email simple
+
+### 📈 **Production Phase (Semaine 2-3)**  
+6. Implémenter tous les 100 badges par catégorie
+7. Aggregation Service avec algorithme de sélection
+8. Template HTML enrichi
+9. Tests complets
+10. Optimisation et calibration
+
+### 🎛️ **Configuration Importante**
+- Commencer avec seuils conservateurs
+- Logging détaillé pour analyser distribution  
+- Feature flags pour activer/désactiver badges
+- Système de versioning pour évolution des conditions
